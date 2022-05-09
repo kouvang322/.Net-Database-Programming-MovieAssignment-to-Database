@@ -6,6 +6,7 @@ namespace MovieLibraryAssignment.DataModels
     public class UserMovie
     {
         public long Id { get; set; }
+
         public long Rating {get;set;}
         public DateTime RatedAt { get; set; }
 

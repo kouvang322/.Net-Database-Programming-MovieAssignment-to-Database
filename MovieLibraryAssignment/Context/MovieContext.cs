@@ -22,7 +22,7 @@ namespace MovieLibraryAssignment.Context
                 .Build();
 
             optionsBuilder
-                //.UseLazyLoadingProxies()
+                .UseLazyLoadingProxies()
                 .UseSqlServer(configuration.GetConnectionString("MovieContext"));
 
         }

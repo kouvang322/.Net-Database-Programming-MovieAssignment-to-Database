@@ -3,11 +3,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MovieLibraryAssignment.Context;
 using MovieLibraryAssignment.DataModels;
+using MovieLibraryAssignment.MenuChoiceHandler;
 using MovieLibraryAssignment.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Numerics;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +26,6 @@ namespace MovieLibraryAssignment
         public ListItemService(ILogger<IListItemService> logger)
         {
             _logger = logger;
-            //Read();
         }
 
         // This method displays the options for the user
@@ -30,7 +33,6 @@ namespace MovieLibraryAssignment
         public void DisplayMenu()
         {
             string userChoice;
-
             do
             {
                 // Ask user what they want to do
@@ -39,6 +41,10 @@ namespace MovieLibraryAssignment
                 Console.WriteLine("2. Add Movie");
                 Console.WriteLine("3. Update Movie");
                 Console.WriteLine("4. Delete Movie");
+                Console.WriteLine("5. Search all Movie records");
+                Console.WriteLine("6. Add a new user");
+                Console.WriteLine("7. Rate a movie");
+
                 Console.WriteLine("Enter any other key to exit.");
                 //  user input
                 userChoice = Console.ReadLine();
@@ -48,112 +54,72 @@ namespace MovieLibraryAssignment
                 {
                     try
                     {
-                        Console.WriteLine("What title do you want to search?:");
-                        var searchString = Console.ReadLine();
-
-                        using (var db = new MovieContext())
-                        {
-                           var movie = db.Movies.ToList().FirstOrDefault(x => x.Title.Contains(searchString,StringComparison.CurrentCultureIgnoreCase));
-                           Console.WriteLine($"({movie.Id}) {movie.Title}");
-                        }
-
+                        Search searchList = new Search();
+                        searchList.SearchMovie();
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
+                        _logger.LogInformation("Error occured while searching");
                     }
-                    
                 }
-                
+
                 if (userChoice == "2")
                 {
-                    Console.WriteLine("Enter NEW Movie Title: ");
-                    var title = Console.ReadLine();
-
-                    Console.WriteLine("Enter new movie release date: ");
-                    var inputDate = Console.ReadLine();
-                    DateTime releaseDate = Convert.ToDateTime(inputDate);
-                    
-                    using (var db = new MovieContext())
-                    {
-                        var movie = new Movie()
-                        {
-                            Title = title,
-                            ReleaseDate = releaseDate
-                        };
-                        db.Movies.Add(movie);
-                        db.SaveChanges();
-
-                        var newMovie = db.Movies.FirstOrDefault(x => x.Title == title);
-                        Console.WriteLine($"({newMovie.Id}) {newMovie.Title} {newMovie.ReleaseDate}");
-
-                    }
+                    Create createMovie = new Create();
+                    createMovie.AddMovie();
                     _logger.LogInformation("Movie was added");
+                    _logger.LogInformation("Genres added to new movie");
                 }
 
                 if (userChoice == "3")
                 {
-                    Console.WriteLine("Enter movie title to Update: ");
-                    var oldMovieTitle = Console.ReadLine();
-
-                    Console.WriteLine("Enter Updated movie title: ");
-                    var newMovieTitle = Console.ReadLine();
-
-                    using (var db = new MovieContext())
-                    {
-                        var updateMovieTitle = db.Movies.FirstOrDefault(x => x.Title == oldMovieTitle);
-                
-                        // verify if movie exist
-                        
-                        while(updateMovieTitle == null)
-                        {
-                            Console.WriteLine("Movie is not in the system, enter another title: ");
-                            oldMovieTitle = Console.ReadLine();
-                            updateMovieTitle = db.Movies.FirstOrDefault(x => x.Title == oldMovieTitle);
-                        }
-
-                        Console.WriteLine($"({updateMovieTitle.Id}) {updateMovieTitle.Title}");
-
-                        updateMovieTitle.Title = newMovieTitle;
-
-                        db.Movies.Update(updateMovieTitle);
-                        db.SaveChanges();
-
-                        var updatedMovieTitle = db.Movies.FirstOrDefault(x => x.Title == newMovieTitle);
-                        Console.WriteLine($"({updatedMovieTitle.Id}) {updatedMovieTitle.Title} {updatedMovieTitle.ReleaseDate}");
-                    }
+                    Modify updateRecord = new Modify();
+                    updateRecord.UpdateMovie();
                     _logger.LogInformation("Movie was updated");
                 }
 
-                else if (userChoice == "4")
+                if (userChoice == "4")
                 {
-                    Console.WriteLine("Enter movie tile to Delete: ");
-                    var inputMovieTitle = Console.ReadLine();
-
-                    using (var db = new MovieContext())
-                    {
-                        var deleteMovie = db.Movies.FirstOrDefault(x => x.Title == inputMovieTitle);
-
-                        // verify exists first
-                        while(deleteMovie == null)
-                        {
-                            Console.WriteLine("Movie is not in the system, enter another title: ");
-                            inputMovieTitle = Console.ReadLine();
-                            deleteMovie = db.Movies.FirstOrDefault(x => x.Title == inputMovieTitle);
-                        }
-                        Console.WriteLine($"({deleteMovie.Id}) {deleteMovie?.Title} {deleteMovie.ReleaseDate}");
-
-                        db.Movies.Remove(deleteMovie);
-                        Console.WriteLine($"{deleteMovie.Title} was removed");
-                        db.SaveChanges();
-                    }
+                    Modify deleteRecord = new Modify();
+                    deleteRecord.DeleteMovie();
                     _logger.LogInformation("Movie was deleted");
                 }
 
-            } while (userChoice == "1" || userChoice == "2" || userChoice == "3" || userChoice == "4");
+                if (userChoice == "5")
+                {
+                    Search searchAll = new Search();
+                    searchAll.SearchAllMovie();
+
+                }
+
+                if (userChoice == "6")
+                {
+                    Create createUser = new Create();
+                    createUser.AddUser();
+                    _logger.LogInformation("User was added");
+                }
+
+                if (userChoice == "7")
+                {
+                    Modify rate = new Modify();
+                    rate.RateMovie();
+                    _logger.LogInformation("Rating was added");
+                }
+
+
+            } while
+            (userChoice == "1"
+            || userChoice == "2"
+            || userChoice == "3"
+            || userChoice == "4"
+            || userChoice == "5"
+            || userChoice == "6"
+            || userChoice == "7");
 
             _logger.LogInformation("Program was closed down.");
         }
     }
 }
+
 
